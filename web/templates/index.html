@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+{% block title %}Classes — AI Report Generator{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+
+  <!-- ── PAGE HEADER ─────────────────────────────────────── -->
+  <header class="page-header">
+    <h1 class="page-title">Student Performance Reports</h1>
+    <p class="page-subtitle">Upload your test data, configure context, then generate AI-powered JEE feedback reports for every student.</p>
+  </header>
+
+  <!-- ── UPLOAD ROW ─────────────────────────────────────── -->
+  <section class="upload-grid">
+
+    <!-- CSV Upload -->
+    <div class="upload-card" id="card-csv">
+      <div class="upload-card-header">
+        <div class="upload-icon csv-icon">📊</div>
+        <div>
+          <h3 class="upload-title">Score CSV</h3>
+          <p class="upload-desc">Classes test export <span class="badge badge-required">Required</span></p>
+        </div>
+      </div>
+      <div class="drop-zone" id="drop-csv" onclick="document.getElementById('input-csv').click()">
+        <div class="drop-inner" id="drop-csv-inner">
+          <div class="drop-icon">📁</div>
+          <p class="drop-text">Drop CSV here or <span class="link-text">browse</span></p>
+          <p class="drop-hint">Columns required: Student Name, Outcome, Marks, Subject, Difficulty Level</p>
+        </div>
+      </div>
+      <input type="file" id="input-csv" accept=".csv" hidden />
+      <div class="file-status" id="csv-status" style="display:none"></div>
+    </div>
+
+    <!-- Syllabus Upload -->
+    <div class="upload-card" id="card-syllabus">
+      <div class="upload-card-header">
+        <div class="upload-icon syllabus-icon">📖</div>
+        <div>
+          <h3 class="upload-title">Syllabus</h3>
+          <p class="upload-desc">Topics covered in test <span class="badge badge-optional">Optional</span></p>
+        </div>
+      </div>
+      <div class="drop-zone" id="drop-syllabus" onclick="document.getElementById('input-syllabus').click()">
+        <div class="drop-inner" id="drop-syllabus-inner">
+          <div class="drop-icon">📄</div>
+          <p class="drop-text">Drop PDF / TXT here or <span class="link-text">browse</span></p>
+          <p class="drop-hint">Enriches AI feedback with specific topic references</p>
+        </div>
+      </div>
+      <input type="file" id="input-syllabus" accept=".pdf,.txt,.md" hidden />
+      <div class="file-status" id="syllabus-status" style="display:none"></div>
+    </div>
+
+    <!-- Question Paper Upload -->
+    <div class="upload-card" id="card-qp">
+      <div class="upload-card-header">
+        <div class="upload-icon qp-icon">📝</div>
+        <div>
+          <h3 class="upload-title">Question Paper</h3>
+          <p class="upload-desc">Actual question paper <span class="badge badge-optional">Optional</span></p>
+        </div>
+      </div>
+      <div class="drop-zone" id="drop-qp" onclick="document.getElementById('input-qp').click()">
+        <div class="drop-inner" id="drop-qp-inner">
+          <div class="drop-icon">📋</div>
+          <p class="drop-text">Drop PDF / TXT here or <span class="link-text">browse</span></p>
+          <p class="drop-hint">Allows AI to reference specific questions in feedback</p>
+        </div>
+      </div>
+      <input type="file" id="input-qp" accept=".pdf,.txt,.md" hidden />
+      <div class="file-status" id="qp-status" style="display:none"></div>
+    </div>
+
+  </section>
+
+  <!-- ── TEST CONFIGURATION ──────────────────────────────── -->
+  <section class="config-panel glass-card" id="config-panel" style="display:none">
+    <h2 class="section-title">⚙️ Test Configuration</h2>
+    <div class="config-row">
+      <div class="form-group">
+        <label class="form-label" for="test-name">Test Name</label>
+        <input type="text" id="test-name" class="form-input" placeholder="e.g. Weekly Test 2 (WT2)" value="Weekly Test" />
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="test-date">Test Date</label>
+        <input type="date" id="test-date" class="form-input" />
+      </div>
+    </div>
+  </section>
+
+  <!-- ── STUDENT SELECTOR ───────────────────────────────── -->
+  <section class="student-panel glass-card" id="student-panel" style="display:none">
+    <div class="student-panel-header">
+      <div>
+        <h2 class="section-title">👥 Select Students</h2>
+        <p class="section-subtitle" id="student-count-label">0 students found</p>
+      </div>
+      <div class="student-controls">
+        <button class="btn btn-ghost btn-sm" id="btn-select-all" onclick="toggleSelectAll(true)">Select All</button>
+        <button class="btn btn-ghost btn-sm" id="btn-deselect-all" onclick="toggleSelectAll(false)">Deselect All</button>
+        <span class="selected-count-badge" id="selected-count">0 selected</span>
+      </div>
+    </div>
+
+    <div class="student-search-wrap">
+      <input type="text" id="student-search" class="form-input search-input" placeholder="🔍 Search students…" oninput="filterStudents(this.value)" />
+    </div>
+
+    <div class="student-grid" id="student-grid"></div>
+
+    <div class="generate-row">
+      <button class="btn btn-primary btn-lg" id="btn-generate" onclick="startGeneration()" disabled>
+        <span class="btn-icon">🚀</span>
+        <span id="btn-generate-text">Generate Reports</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- ── PROGRESS PANEL ────────────────────────────────── -->
+  <section class="progress-panel glass-card" id="progress-panel" style="display:none">
+    <h2 class="section-title">⏳ Generating Reports</h2>
+    <div class="progress-meta" id="progress-meta">Starting…</div>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-track">
+        <div class="progress-bar-fill" id="progress-bar-fill" style="width:0%"></div>
+      </div>
+      <span class="progress-pct" id="progress-pct">0%</span>
+    </div>
+    <div class="progress-log" id="progress-log"></div>
+  </section>
+
+  <!-- ── RESULTS PANEL ──────────────────────────────────── -->
+  <section class="results-panel glass-card" id="results-panel" style="display:none">
+    <div class="results-header">
+      <div>
+        <h2 class="section-title">✅ Reports Generated</h2>
+        <p class="section-subtitle" id="results-summary"></p>
+      </div>
+      <div class="results-actions">
+        <button class="btn btn-success" id="btn-download-all" onclick="downloadAll()">
+          <span>⬇️</span> Download All (ZIP)
+        </button>
+        <button class="btn btn-ghost" onclick="resetDashboard()">
+          <span>🔄</span> New Batch
+        </button>
+      </div>
+    </div>
+
+    <!-- Success table -->
+    <div class="results-table-wrap" id="success-table-wrap" style="display:none">
+      <h3 class="sub-heading success-heading">✅ Successful</h3>
+      <table class="results-table" id="success-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Student</th>
+            <th>Marks</th>
+            <th>Accuracy</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="success-tbody"></tbody>
+      </table>
+    </div>
+
+    <!-- Failed table -->
+    <div class="results-table-wrap" id="failed-table-wrap" style="display:none">
+      <h3 class="sub-heading failed-heading">❌ Failed</h3>
+      <table class="results-table" id="failed-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Student</th>
+            <th>Reason</th>
+          </tr>
+        </thead>
+        <tbody id="failed-tbody"></tbody>
+      </table>
+    </div>
+  </section>
+
+</div>
+{% endblock %}

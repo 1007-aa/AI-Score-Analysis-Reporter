@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Report Preview — {{ filename }}{% endblock %}
+
+{% block content %}
+<div class="preview-page">
+
+  <div class="preview-toolbar glass-card">
+    <div class="preview-toolbar-left">
+      <a href="/" class="btn btn-ghost btn-sm">← Back to Dashboard</a>
+      <span class="preview-filename">{{ filename }}</span>
+    </div>
+    <div class="preview-toolbar-right">
+      <button class="btn btn-ghost btn-sm" onclick="copyReport()">📋 Copy</button>
+      <a href="/download/{{ filename }}" class="btn btn-primary btn-sm">⬇️ Download</a>
+    </div>
+  </div>
+
+  <div class="report-wrap glass-card">
+    <pre class="report-content" id="report-content">{{ content }}</pre>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function copyReport() {
+  const text = document.getElementById('report-content').innerText;
+  navigator.clipboard.writeText(text).then(() => showToast('Report copied to clipboard!', 'success'));
+}
+</script>
+{% endblock %}
